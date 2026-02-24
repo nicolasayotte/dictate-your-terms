@@ -1,0 +1,127 @@
+# Setup
+
+> **AI Context Summary**: Setting up DictateYourTerms requires Rust (via rustup), a GGML-format whisper model file, and system libraries for audio and clipboard. Ubuntu needs several apt packages; Windows needs only the Rust toolchain. The daemon must be running before the CLI can transcribe. Config lives at `~/.config/dyt/config.toml` (Linux) or `%APPDATA%\dyt\config.toml` (Windows).
+
+## Prerequisites
+
+### Rust Toolchain
+
+Install via [rustup](https://rustup.rs/) on all platforms:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+### System Dependencies (Ubuntu/Debian)
+
+```bash
+sudo apt install build-essential cmake pkg-config libclang-dev \
+  libasound2-dev libpipewire-0.3-dev \
+  libx11-dev libxcursor-dev libxrandr-dev libxi-dev
+```
+
+| Category | Packages |
+|----------|----------|
+| whisper.cpp build | `build-essential`, `cmake`, `pkg-config`, `libclang-dev` |
+| Audio (cpal/ALSA) | `libasound2-dev`, `libpipewire-0.3-dev` |
+| Clipboard (arboard/X11) | `libx11-dev`, `libxcursor-dev`, `libxrandr-dev`, `libxi-dev` |
+
+### Windows
+
+Install Rust via rustup. WASAPI (audio) and the Windows clipboard API are available natively — no additional packages required. Use the MSVC toolchain (default on Windows).
+
+## Build
+
+```bash
+cargo build --release
+# Outputs:
+#   target/release/dyt-daemon    (or .exe on Windows)
+#   target/release/dyt           (or .exe on Windows)
+```
+
+## Whisper Model
+
+Download a GGML-format whisper model. The `base.en` model is a good starting point for English dictation:
+
+```bash
+# Check https://huggingface.co/ggerganov/whisper.cpp for current model files
+# Example (verify the URL is current before using):
+wget https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin \
+  -O ~/.local/share/dyt/ggml-base.en.bin
+```
+
+See the README for the recommended download command for your platform.
+
+## Config File
+
+Create the config directory and file:
+
+```bash
+# Linux
+mkdir -p ~/.config/dyt
+cat > ~/.config/dyt/config.toml << 'EOF'
+[server]
+host = "127.0.0.1"
+port = 3030
+
+[engine]
+provider = "whisper_cpp"
+model_path = "/home/you/.local/share/dyt/ggml-base.en.bin"
+threads = 4
+EOF
+```
+
+On Windows, create `%APPDATA%\dyt\config.toml` with the same content, using a Windows-style `model_path` (e.g., `C:\Users\you\dyt\ggml-base.en.bin`).
+
+See the `config/` directory for example configs.
+
+## Running
+
+### Start the Daemon
+
+```bash
+# Development (from project root)
+cargo run -p dyt-daemon
+
+# Installed binary
+dyt-daemon
+```
+
+The daemon logs to stdout and stays running. It binds `127.0.0.1:3030` by default. Restart it to reload the model or config.
+
+### Record and Transcribe
+
+```bash
+# Start recording; speak, then press Enter to stop and transcribe
+cargo run -p dyt-cli -- --record
+
+# Installed binary
+dyt --record
+```
+
+The transcript is injected into the clipboard and printed to stdout.
+
+### Smoke Test (no daemon required)
+
+```bash
+cargo run --bin dyt-smoke
+```
+
+Tests mic capture → WAV encoding pipeline without the daemon. Use this to verify audio hardware works before troubleshooting transcription issues.
+
+## Verify the Setup
+
+```bash
+# Terminal 1
+dyt-daemon
+
+# Terminal 2
+dyt --record
+# Speak, press Enter → transcript appears in clipboard
+```
+
+## Cross-References
+
+- System architecture: `docs/architecture.md`
+- API reference: `docs/api.md`
+- Release builds: `docs/deployment.md`
