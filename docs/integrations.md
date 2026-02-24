@@ -2,21 +2,83 @@
 
 ## Neovim
 
-Pipe dictation directly into the active Neovim buffer via a Lua keymap in `init.lua`:
+A first-party Lua plugin ships at `editors/nvim/` in this repository. It opens a floating terminal running `dyt --record`, waits for you to speak and press Enter, then auto-closes the float and inserts the transcript at the cursor. Works from both normal and insert mode.
+
+### Installation
+
+**lazy.nvim** — point at the subdirectory inside a local clone:
 
 ```lua
-vim.keymap.set({'n', 'i'}, '<leader>v', function()
-    print("Listening (Press Enter in terminal to stop)...")
-    -- Spawn the stt-cli process
-    vim.fn.system('dyt --record')
+{
+  dir = '/path/to/dictate-your-terms/editors/nvim',
+}
+```
 
-    -- Pull the result from the system clipboard
-    local transcript = vim.fn.getreg('+')
+**packer.nvim**:
 
-    -- Insert the text at the cursor position
-    vim.api.nvim_put({transcript}, 'c', true, true)
-    print("Dictation inserted.")
-end, { desc = "Voice Dictation via local Whisper daemon" })
+```lua
+use { '/path/to/dictate-your-terms/editors/nvim' }
+```
+
+**vim-plug**:
+
+```vim
+Plug '/path/to/dictate-your-terms/editors/nvim'
+```
+
+**Manual (any plugin manager or bare Neovim)**:
+
+```lua
+vim.opt.runtimepath:append('/path/to/dictate-your-terms/editors/nvim')
+```
+
+The plugin auto-initialises with defaults on startup via `plugin/dyt.lua`. If you call `setup()` yourself before that shim fires, the shim is a no-op.
+
+### Configuration
+
+Call `require('dyt').setup(opts)` in your Neovim config. All keys are optional; omit any to keep the default.
+
+```lua
+require('dyt').setup({
+  keymap     = '<leader>v',              -- trigger in normal and insert mode
+  daemon     = 'http://127.0.0.1:3030',  -- stt-daemon address
+  win_width  = 0.5,                      -- float width as fraction of editor width
+  win_height = 10,                       -- float height in rows
+  border     = 'rounded',                -- any nvim_open_win border style
+  notify     = true,                     -- emit vim.notify status messages
+})
+```
+
+| Option       | Type    | Default                       | Description                                          |
+|--------------|---------|-------------------------------|------------------------------------------------------|
+| `keymap`     | string  | `'<leader>v'`                 | Key sequence bound in both normal and insert mode    |
+| `daemon`     | string  | `'http://127.0.0.1:3030'`     | HTTP base URL of the running `stt-daemon`            |
+| `win_width`  | number  | `0.5`                         | Float width as a fraction of the current editor width|
+| `win_height` | number  | `10`                          | Float height in absolute rows                        |
+| `border`     | string  | `'rounded'`                   | Border style passed to `nvim_open_win`               |
+| `notify`     | boolean | `true`                        | Whether to emit `vim.notify` status messages         |
+
+### Behavior
+
+1. Pressing the keymap opens a floating terminal and runs `dyt --record`.
+2. Speak. Press Enter in the terminal to stop recording.
+3. The float closes automatically.
+4. The plugin reads the system clipboard and inserts the transcript at the cursor position.
+5. If `notify = true`, a message is shown on success or on non-zero exit.
+6. A re-entrancy guard prevents a second invocation while the float is open.
+
+### Customising the keymap
+
+To use a different key sequence, pass `keymap` to `setup()`:
+
+```lua
+require('dyt').setup({ keymap = '<C-r>' })
+```
+
+To suppress the default binding and manage the keymap yourself, pass `keymap = false`:
+
+```lua
+require('dyt').setup({ keymap = false })
 ```
 
 ## Terminal / WezTerm / Tmux
