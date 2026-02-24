@@ -1,5 +1,5 @@
 use hound::WavReader;
-use stt_cli::encode::to_wav;
+use dyt_cli::encode::to_wav;
 use std::f32::consts::PI;
 
 #[test]
