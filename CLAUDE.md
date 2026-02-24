@@ -24,14 +24,33 @@ Rust workspace (edition 2021). Daemon exposes `POST /transcribe` on `127.0.0.1:3
 
 ## Commands
 
+All `cargo` commands **must** run inside the Nix dev shell. Either enter it
+interactively or prefix each command with `nix develop --command`:
+
 ```bash
-nix develop                       # Enter dev shell with all dependencies
-cargo check                       # Type-check without building
-cargo build --release             # Build both crates
-cargo test                        # Run tests
-cargo run -p stt-daemon           # Run daemon (needs ~/.config/dyt/config.toml)
-cargo run -p stt-cli -- --record  # Record and transcribe (needs daemon running)
+nix develop                                          # Enter dev shell (interactive)
+
+nix develop --command cargo check                    # Type-check without building
+nix develop --command cargo build --release          # Build both crates
+nix develop --command cargo test                     # Run tests
+nix develop --command cargo run -p stt-daemon        # Run daemon (needs ~/.config/dyt/config.toml)
+nix develop --command cargo run -p stt-cli -- --record  # Record and transcribe (needs daemon running)
+nix develop --command cargo run --bin dyt-smoke      # Smoke-test mic → WAV pipeline (no daemon needed)
 ```
+
+### Nix dev shell — what it provides
+
+| Category | Packages |
+|----------|----------|
+| Rust toolchain | `rustc`, `cargo`, `clippy`, `rustfmt` |
+| whisper.cpp build | `cmake`, `pkg-config`, `libclang`, `gcc` |
+| Audio (cpal) | `alsa-lib`, `pipewire` |
+| Clipboard (arboard) | `libx11`, `libxcursor`, `libxrandr`, `libxi` |
+
+Environment variables set by the shell:
+- `LIBCLANG_PATH` — points `bindgen` at `libclang.lib`
+- `ALSA_PLUGIN_DIR` — routes ALSA through PipeWire on Ubuntu
+- `LD_LIBRARY_PATH` — exposes `stdenv.cc.cc.lib`, `alsa-lib`, `pipewire`
 
 ## Standards
 

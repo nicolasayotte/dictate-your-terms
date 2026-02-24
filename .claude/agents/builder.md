@@ -9,6 +9,7 @@ allowed-tools:
   - Grep
   - Bash
 model: sonnet
+color: blue
 ---
 
 # Builder Agent

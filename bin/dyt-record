@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Record from mic, transcribe via daemon, copy result to clipboard.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+CLI="$ROOT/target/debug/dyt"
+
+if [[ ! -x "$CLI" ]]; then
+    echo "Binary not found — building first..."
+    cargo build -p stt-cli --bin dyt
+fi
+
+echo ""
+echo "  Speak now. Press Enter to stop and transcribe."
+echo ""
+"$CLI" --record

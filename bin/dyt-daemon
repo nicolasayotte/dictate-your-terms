@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Kill the running daemon (if any) then restart it.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DAEMON="$ROOT/target/release/stt-daemon"
+
+if [[ ! -x "$DAEMON" ]]; then
+    echo "Binary not found — building release first..."
+    cargo build --release -p stt-daemon
+fi
+
+if pid=$(lsof -ti :3030 2>/dev/null); then
+    echo "Stopping daemon (pid $pid)..."
+    kill "$pid"
+    sleep 0.5
+fi
+
+echo "Starting stt-daemon..."
+exec "$DAEMON"
