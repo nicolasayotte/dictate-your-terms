@@ -58,6 +58,11 @@ require('dyt').setup({
 | `border`     | string  | `'rounded'`                   | Border style passed to `nvim_open_win`               |
 | `notify`     | boolean | `true`                        | Whether to emit `vim.notify` status messages         |
 
+### Prerequisites
+
+- `stt-daemon` must be running before pressing the keymap.
+- The `dyt` binary must be on `PATH` in the environment that launches Neovim. If it is not, the plugin shows `[dyt] Failed to start dyt. Is it installed and on PATH?` and cleans up without crashing.
+
 ### Behavior
 
 1. Pressing the keymap opens a floating terminal and runs `dyt --record`.
