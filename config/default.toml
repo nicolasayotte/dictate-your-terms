@@ -1,0 +1,9 @@
+[server]
+port = 3030
+host = "127.0.0.1"
+
+[engine]
+# Supported: "whisper_cpp" (more backends coming)
+provider = "whisper_cpp"
+model_path = "~/.models/ggml-base.en.bin"
+threads = 4

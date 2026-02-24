@@ -1,0 +1,21 @@
+[package]
+name = "stt-daemon"
+version = "0.1.0"
+edition = "2021"
+description = "Persistent inference engine for DictateYourTerms — keeps the STT model hot in memory"
+
+[[bin]]
+name = "stt-daemon"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+whisper-rs = "0.14"
+hound = "3.5"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+dirs = "6"

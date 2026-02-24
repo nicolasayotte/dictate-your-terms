@@ -1,0 +1,22 @@
+[package]
+name = "stt-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Capture client for DictateYourTerms — record, transcribe, clipboard inject"
+
+[[bin]]
+name = "dyt"
+path = "src/main.rs"
+
+[[bin]]
+name = "dyt-smoke"
+path = "src/smoke.rs"
+
+[dependencies]
+cpal = "0.15"
+ringbuf = "0.4"
+reqwest = { version = "0.12", default-features = false, features = ["blocking"] }
+arboard = "3"
+hound = "3.5"
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
