@@ -1,4 +1,4 @@
-use stt_cli::{capture, encode, transport};
+use dyt_cli::{capture, encode, transport};
 
 use anyhow::Result;
 use clap::Parser;
