@@ -1,6 +1,6 @@
-mod config;
-mod provider;
-mod server;
+use stt_daemon::config;
+use stt_daemon::provider;
+use stt_daemon::server;
 
 use anyhow::Result;
 use tracing::info;
