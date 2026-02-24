@@ -45,12 +45,6 @@ Run `./scripts/setup.sh` (Linux/macOS) or `.\scripts\setup.ps1` (Windows) for in
 
 ## Notes
 
-- **Windows OpenBLAS build**: The `whisper-rs` dependency uses `features = ["openblas"]` on Windows via `[target.'cfg(windows)'.dependencies]`. Building requires vcpkg + three things:
-  1. `BLAS_INCLUDE_DIRS` env var must point to `%VCPKG_ROOT%\installed\x64-windows\include\openblas` (the `openblas` subdirectory — vcpkg puts `cblas.h` there, not in `include\` directly).
-  2. `libopenblas.lib` must exist in `%VCPKG_ROOT%\installed\x64-windows\lib\` — vcpkg installs `openblas.lib` (no `lib` prefix) but `whisper-rs-sys` hardcodes `cargo:rustc-link-lib=libopenblas`, so copy: `Copy-Item openblas.lib libopenblas.lib`.
-  3. `VCPKG_ROOT` env var must be set — `dyt-daemon/build.rs` emits `cargo:rustc-link-search=native=` pointing to the vcpkg lib dir so the Rust linker can find `libopenblas.lib`.
-  Run `.\scripts\setup.ps1` to set up automatically.
-
 - **hound in-memory WAV**: construct with `Cursor::new(&mut buf)`, call `finalize()`, return `buf`. Do NOT call `writer.into_inner()` when `WavWriter` was given `&mut cursor`. Preferred pattern (matches `encode.rs`):
   ```rust
   let mut buf = Vec::new();

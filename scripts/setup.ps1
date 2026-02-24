@@ -42,59 +42,6 @@ if ($answer -eq "y") {
     Write-Host "Skipping dependency installation." -ForegroundColor Yellow
 }
 
-# ── Install OpenBLAS via vcpkg (for whisper-rs acceleration) ─────────
-$answer = Read-Host "`nInstall OpenBLAS via vcpkg for whisper-rs acceleration? (y/N)"
-if ($answer -eq "y") {
-    $vcpkgCmd = Get-Command vcpkg -ErrorAction SilentlyContinue
-    if (-not $vcpkgCmd) {
-        Write-Host "vcpkg not found. Installing vcpkg..." -ForegroundColor Green
-        $vcpkgDir = "$env:USERPROFILE\vcpkg"
-        git clone https://github.com/microsoft/vcpkg.git $vcpkgDir
-        & "$vcpkgDir\bootstrap-vcpkg.bat" -disableMetrics
-        [System.Environment]::SetEnvironmentVariable("VCPKG_ROOT", $vcpkgDir, "User")
-        $env:VCPKG_ROOT = $vcpkgDir
-        $env:PATH = "$vcpkgDir;$env:PATH"
-        Write-Host "vcpkg installed to $vcpkgDir and VCPKG_ROOT set." -ForegroundColor Green
-    } else {
-        $vcpkgDir = Split-Path $vcpkgCmd.Source -Parent
-        Write-Host "vcpkg already installed at $vcpkgDir — skipping clone." -ForegroundColor Yellow
-        if (-not $env:VCPKG_ROOT) {
-            [System.Environment]::SetEnvironmentVariable("VCPKG_ROOT", $vcpkgDir, "User")
-            $env:VCPKG_ROOT = $vcpkgDir
-            Write-Host "VCPKG_ROOT set to $vcpkgDir" -ForegroundColor Green
-        }
-    }
-
-    Write-Host "Installing openblas:x64-windows via vcpkg..." -ForegroundColor Green
-    vcpkg install openblas:x64-windows
-    vcpkg integrate install
-
-    # whisper-rs-sys requires BLAS_INCLUDE_DIRS to locate OpenBLAS headers
-    $blasInclude = "$env:VCPKG_ROOT\installed\x64-windows\include\openblas"
-    [System.Environment]::SetEnvironmentVariable("BLAS_INCLUDE_DIRS", $blasInclude, "User")
-    $env:BLAS_INCLUDE_DIRS = $blasInclude
-    Write-Host "BLAS_INCLUDE_DIRS set to $blasInclude" -ForegroundColor Green
-
-    # whisper-rs-sys hardcodes cargo:rustc-link-lib=libopenblas, but vcpkg installs
-    # openblas.lib (no lib prefix). MSVC linker looks for libopenblas.lib, so create a copy.
-    $vcpkgLib = "$env:VCPKG_ROOT\installed\x64-windows\lib"
-    if (-not (Test-Path "$vcpkgLib\libopenblas.lib")) {
-        Copy-Item "$vcpkgLib\openblas.lib" "$vcpkgLib\libopenblas.lib"
-        Write-Host "Created libopenblas.lib alias in $vcpkgLib" -ForegroundColor Green
-    }
-
-    # CMAKE_TOOLCHAIN_FILE lets CMake's FindBLAS locate openblas.lib via vcpkg;
-    # without it, CMake finds the headers but not BLAS_LIBRARIES and ggml-blas.lib is never produced.
-    $vcpkgToolchain = "$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
-    [System.Environment]::SetEnvironmentVariable("CMAKE_TOOLCHAIN_FILE", $vcpkgToolchain, "User")
-    $env:CMAKE_TOOLCHAIN_FILE = $vcpkgToolchain
-    Write-Host "CMAKE_TOOLCHAIN_FILE set to $vcpkgToolchain" -ForegroundColor Green
-
-    Write-Host "OpenBLAS installed. Build will link against it automatically." -ForegroundColor Green
-    Write-Host "`nNote: You may need to open a new terminal for PATH changes to take effect." -ForegroundColor Yellow
-} else {
-    Write-Host "Skipping OpenBLAS installation. Build will use default CPU path (no BLAS acceleration)." -ForegroundColor Yellow
-}
 
 # ── Model selection menu ─────────────────────────────────────────────
 Write-Host "`nSelect a whisper model to download:" -ForegroundColor Cyan
