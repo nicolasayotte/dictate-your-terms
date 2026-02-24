@@ -123,9 +123,9 @@ local function start_dictation()
   vim.wo[win].signcolumn     = 'no'
 
   local cmd = { 'dyt', '--record', '--daemon', M._config.daemon }
-  local job_id = vim.fn.termopen(cmd, { on_exit = on_exit })
+  local ok, job_id = pcall(vim.fn.termopen, cmd, { on_exit = on_exit })
 
-  if job_id <= 0 then
+  if not ok or job_id <= 0 then
     notify('Failed to start dyt. Is it installed and on PATH?', vim.log.levels.ERROR)
     close_float()
     reset_state()
