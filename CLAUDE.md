@@ -25,43 +25,26 @@ Rust workspace (edition 2021). Daemon exposes `POST /transcribe` on `127.0.0.1:3
 ## Commands
 
 ```bash
-cargo check                                          # Type-check without building
-cargo build --release                                # Build both crates
-cargo test                                           # Run tests
-cargo run -p dyt-daemon                              # Run daemon (needs ~/.config/dyt/config.toml)
-cargo run -p dyt-cli -- --record                     # Record and transcribe (needs daemon running)
-cargo run --bin dyt-smoke                            # Smoke-test mic → WAV pipeline (no daemon needed)
+cargo check                          # Type-check without building
+cargo build --release                # Build both crates
+cargo test                           # Run tests
+cargo run -p dyt-daemon              # Run daemon (needs ~/.config/dyt/config.toml)
+cargo run -p dyt-cli -- --record     # Record and transcribe (needs daemon running)
+cargo run --bin dyt-smoke            # Smoke-test mic → WAV pipeline (no daemon needed)
 ```
 
-### System Dependencies (Ubuntu)
-
-```bash
-sudo apt install build-essential cmake pkg-config libclang-dev \
-  libasound2-dev libpipewire-0.3-dev \
-  libx11-dev libxcursor-dev libxrandr-dev libxi-dev
-```
-
-| Category | Packages |
-|----------|----------|
-| Rust toolchain | Install via [rustup](https://rustup.rs/) |
-| whisper.cpp build | `build-essential`, `cmake`, `pkg-config`, `libclang-dev` |
-| Audio (cpal) | `libasound2-dev`, `libpipewire-0.3-dev` |
-| Clipboard (arboard) | `libx11-dev`, `libxcursor-dev`, `libxrandr-dev`, `libxi-dev` |
-
-On **Windows**, install the Rust toolchain via rustup. WASAPI and the Windows clipboard are available natively — no extra dependencies.
+See `docs/setup.md` for system dependencies (Ubuntu packages, Windows notes).
 
 ## Standards
 
 - **Cross-platform**: code must compile on both Ubuntu and Windows
 - **Audio callback** (cpal): no locks, no allocations — real-time safe by constraint
 - **ModelProvider trait** is the only extension point for new STT backends; register in `provider.rs`
-- **Config path**: `~/.config/dyt/config.toml` on Linux (XDG), `%APPDATA%\dyt\config.toml` on Windows
+- **Config path**: `~/.config/dyt/config.toml` on Linux, `%APPDATA%\dyt\config.toml` on Windows
 
 ## Notes
 
-- Daemon resamples all incoming audio to 16 kHz mono f32 before inference (linear interpolation)
-- Default bind: `127.0.0.1:3030` — localhost only, no auth
-- **hound in-memory WAV** (`hound = "3.5"`): use the pattern where the writer owns the `Cursor` — construct with `Cursor::new(&mut buf)`, call `finalize()`, then return `buf`. Do NOT specify `writer.into_inner()` when `WavWriter` was given `&mut cursor` — that requires an explicit scope block. Preferred pattern (matches `encode.rs`):
+- **hound in-memory WAV**: construct with `Cursor::new(&mut buf)`, call `finalize()`, return `buf`. Do NOT call `writer.into_inner()` when `WavWriter` was given `&mut cursor`. Preferred pattern (matches `encode.rs`):
   ```rust
   let mut buf = Vec::new();
   let mut writer = hound::WavWriter::new(std::io::Cursor::new(&mut buf), spec)?;
