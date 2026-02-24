@@ -7,7 +7,7 @@ CLI="$ROOT/target/debug/dyt"
 
 if [[ ! -x "$CLI" ]]; then
     echo "Binary not found — building first..."
-    cargo build -p stt-cli --bin dyt
+    cargo build -p dyt-cli --bin dyt
 fi
 
 echo ""

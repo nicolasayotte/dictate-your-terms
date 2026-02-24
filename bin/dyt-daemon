@@ -3,11 +3,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DAEMON="$ROOT/target/release/stt-daemon"
+DAEMON="$ROOT/target/release/dyt-daemon"
 
 if [[ ! -x "$DAEMON" ]]; then
     echo "Binary not found — building release first..."
-    cargo build --release -p stt-daemon
+    cargo build --release -p dyt-daemon
 fi
 
 if pid=$(lsof -ti :3030 2>/dev/null); then
@@ -16,5 +16,5 @@ if pid=$(lsof -ti :3030 2>/dev/null); then
     sleep 0.5
 fi
 
-echo "Starting stt-daemon..."
+echo "Starting dyt-daemon..."
 exec "$DAEMON"

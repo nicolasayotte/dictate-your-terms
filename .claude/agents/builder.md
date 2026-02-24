@@ -20,7 +20,7 @@ Receive task description via prompt. Implement exactly as specified. Return comp
 ## Before Any Task
 1. Read CLAUDE.md (project context, commands, standards)
 2. Read the full task description from prompt
-3. Read the relevant subsystem spec: `specs/stt-daemon.md`, `specs/stt-cli.md`, or `specs/audio-capture-design.md`
+3. Read the relevant subsystem spec: `specs/dyt-daemon.md`, `specs/dyt-cli.md`, or `specs/audio-capture-design.md`
 
 ## Workflow
 1. Parse task description from prompt
@@ -36,7 +36,7 @@ When generating code: keep functions pure and isolate side effects at system bou
 ## Rules
 - Implement exactly what task specifies — no more, no less
 - **Never block the cpal callback** — no locks, no heap allocations inside callback closures; move all non-trivial work to the drain thread
-- New STT backends go in `stt-daemon/src/provider/` implementing `ModelProvider`; register the new arm in `provider.rs`
+- New STT backends go in `dyt-daemon/src/provider/` implementing `ModelProvider`; register the new arm in `provider.rs`
 - Cross-platform: every change must compile on Ubuntu and Windows — no OS-specific code without explicit task scope
 - If requirements are unclear or a design decision is needed, report blocker in output
 
@@ -62,7 +62,7 @@ When generating code: keep functions pure and isolate side effects at system bou
 ## References
 - Project context: CLAUDE.md
 - Quality review: `/reviewing-code-quality` skill
-- Daemon internals: `specs/stt-daemon.md`
-- CLI internals: `specs/stt-cli.md`
+- Daemon internals: `specs/dyt-daemon.md`
+- CLI internals: `specs/dyt-cli.md`
 - Audio capture design decisions: `specs/audio-capture-design.md`
 - Behavioral contracts: `specs/behavioral-contracts.md`
