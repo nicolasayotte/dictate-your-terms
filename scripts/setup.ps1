@@ -70,10 +70,25 @@ if ($answer -eq "y") {
     vcpkg integrate install
 
     # whisper-rs-sys requires BLAS_INCLUDE_DIRS to locate OpenBLAS headers
-    $blasInclude = "$env:VCPKG_ROOT\installed\x64-windows\include"
+    $blasInclude = "$env:VCPKG_ROOT\installed\x64-windows\include\openblas"
     [System.Environment]::SetEnvironmentVariable("BLAS_INCLUDE_DIRS", $blasInclude, "User")
     $env:BLAS_INCLUDE_DIRS = $blasInclude
     Write-Host "BLAS_INCLUDE_DIRS set to $blasInclude" -ForegroundColor Green
+
+    # whisper-rs-sys hardcodes cargo:rustc-link-lib=libopenblas, but vcpkg installs
+    # openblas.lib (no lib prefix). MSVC linker looks for libopenblas.lib, so create a copy.
+    $vcpkgLib = "$env:VCPKG_ROOT\installed\x64-windows\lib"
+    if (-not (Test-Path "$vcpkgLib\libopenblas.lib")) {
+        Copy-Item "$vcpkgLib\openblas.lib" "$vcpkgLib\libopenblas.lib"
+        Write-Host "Created libopenblas.lib alias in $vcpkgLib" -ForegroundColor Green
+    }
+
+    # CMAKE_TOOLCHAIN_FILE lets CMake's FindBLAS locate openblas.lib via vcpkg;
+    # without it, CMake finds the headers but not BLAS_LIBRARIES and ggml-blas.lib is never produced.
+    $vcpkgToolchain = "$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+    [System.Environment]::SetEnvironmentVariable("CMAKE_TOOLCHAIN_FILE", $vcpkgToolchain, "User")
+    $env:CMAKE_TOOLCHAIN_FILE = $vcpkgToolchain
+    Write-Host "CMAKE_TOOLCHAIN_FILE set to $vcpkgToolchain" -ForegroundColor Green
 
     Write-Host "OpenBLAS installed. Build will link against it automatically." -ForegroundColor Green
     Write-Host "`nNote: You may need to open a new terminal for PATH changes to take effect." -ForegroundColor Yellow
