@@ -6,4 +6,4 @@ host = "127.0.0.1"
 # Supported: "whisper_cpp" (more backends coming)
 provider = "whisper_cpp"
 model_path = "~/.models/ggml-base.en.bin"
-threads = 4
+threads = 8
