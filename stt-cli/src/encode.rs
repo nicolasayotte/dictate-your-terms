@@ -52,3 +52,68 @@ fn resample(samples: &[f32], from_rate: u32, to_rate: u32) -> Vec<f32> {
 
     output
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn decode_wav(bytes: &[u8]) -> (hound::WavSpec, Vec<i16>) {
+        let cursor = std::io::Cursor::new(bytes);
+        let mut reader = hound::WavReader::new(cursor).unwrap();
+        let spec = reader.spec();
+        let samples: Vec<i16> = reader.samples::<i16>().map(|s| s.unwrap()).collect();
+        (spec, samples)
+    }
+
+    #[test]
+    fn passthrough_16k() {
+        let input: Vec<f32> = (0..160).map(|i| (i as f32) / 160.0 - 0.5).collect();
+        let wav = to_wav(&input, 16000).unwrap();
+        let (_, samples) = decode_wav(&wav);
+        assert_eq!(samples.len(), input.len());
+    }
+
+    #[test]
+    fn resample_48k_to_16k() {
+        let input: Vec<f32> = vec![0.0f32; 480];
+        let wav = to_wav(&input, 48000).unwrap();
+        let (_, samples) = decode_wav(&wav);
+        let expected = input.len() / 3;
+        let diff = (samples.len() as isize - expected as isize).unsigned_abs();
+        assert!(diff <= 1, "expected ~{expected} samples, got {}", samples.len());
+    }
+
+    #[test]
+    fn empty_input() {
+        let wav = to_wav(&[], 16000).unwrap();
+        let (_, samples) = decode_wav(&wav);
+        assert_eq!(samples.len(), 0);
+    }
+
+    #[test]
+    fn clamps_positive() {
+        let wav = to_wav(&[2.0_f32], 16000).unwrap();
+        let (_, samples) = decode_wav(&wav);
+        assert_eq!(samples.len(), 1);
+        assert_eq!(samples[0], i16::MAX);
+    }
+
+    #[test]
+    fn clamps_negative() {
+        let wav = to_wav(&[-2.0_f32], 16000).unwrap();
+        let (_, samples) = decode_wav(&wav);
+        assert_eq!(samples.len(), 1);
+        // (-1.0 * 32767) as i16 == -32767, not i16::MIN (-32768)
+        assert_eq!(samples[0], -i16::MAX);
+    }
+
+    #[test]
+    fn wav_metadata() {
+        let wav = to_wav(&[0.0_f32], 16000).unwrap();
+        let (spec, _) = decode_wav(&wav);
+        assert_eq!(spec.channels, 1);
+        assert_eq!(spec.sample_rate, 16000);
+        assert_eq!(spec.bits_per_sample, 16);
+        assert_eq!(spec.sample_format, hound::SampleFormat::Int);
+    }
+}

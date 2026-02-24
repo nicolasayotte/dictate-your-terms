@@ -167,3 +167,34 @@ fn drain_to_collected(buf: &[f32], channels: usize, collected: &mut Vec<f32>) {
         collected.extend_from_slice(buf);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn drain_mono_passthrough() {
+        let input = vec![0.1_f32, 0.2, 0.3, 0.4];
+        let mut collected = Vec::new();
+        drain_to_collected(&input, 1, &mut collected);
+        assert_eq!(collected, input);
+    }
+
+    #[test]
+    fn drain_stereo_averages() {
+        let input = vec![1.0_f32, -1.0, 0.5, 0.5];
+        let mut collected = Vec::new();
+        drain_to_collected(&input, 2, &mut collected);
+        assert_eq!(collected.len(), 2);
+        assert!((collected[0] - 0.0).abs() < f32::EPSILON);
+        assert!((collected[1] - 0.5).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn drain_stereo_multiple_frames() {
+        let input: Vec<f32> = vec![0.0f32; 20];
+        let mut collected = Vec::new();
+        drain_to_collected(&input, 2, &mut collected);
+        assert_eq!(collected.len(), 10);
+    }
+}
