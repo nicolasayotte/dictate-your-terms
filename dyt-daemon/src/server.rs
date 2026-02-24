@@ -32,12 +32,27 @@ async fn transcribe(
         StatusCode::BAD_REQUEST
     })?;
 
-    let provider = provider.lock().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    provider.transcribe(&audio_data).map_err(|e| {
-        tracing::error!("Transcription failed: {e}");
-        StatusCode::INTERNAL_SERVER_ERROR
+    let provider_clone = Arc::clone(&provider);
+    let result = tokio::task::spawn_blocking(move || {
+        let start = std::time::Instant::now();
+        let guard = provider_clone
+            .lock()
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        let transcription = guard.transcribe(&audio_data).map_err(|e| {
+            tracing::error!("Transcription failed: {e}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+        let elapsed = start.elapsed();
+        tracing::info!("Inference completed in {:.1}ms", elapsed.as_secs_f64() * 1000.0);
+        Ok::<String, StatusCode>(transcription)
     })
+    .await
+    .map_err(|e| {
+        tracing::error!("spawn_blocking task panicked: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    result
 }
 
 /// Decode WAV bytes into 16kHz mono f32 samples.
