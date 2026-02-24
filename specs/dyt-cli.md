@@ -1,4 +1,4 @@
-# stt-cli (Capture Client)
+# dyt-cli (Capture Client)
 
 ## Responsibility
 
@@ -16,7 +16,7 @@ A transient, highly optimized binary triggered by a hotkey. It handles OS-level 
 
 ## Architecture
 
-When `stt-cli --record` is executed:
+When `dyt-cli --record` is executed:
 
 1. Queries `cpal` for the default system microphone.
 2. Pre-allocates a lock-free SPSC ring buffer (`ringbuf::HeapRb<f32>`) sized for ~60 seconds of audio (~3MB).

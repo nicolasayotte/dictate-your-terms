@@ -1,4 +1,4 @@
-# stt-daemon (Inference Engine)
+# dyt-daemon (Inference Engine)
 
 ## Responsibility
 

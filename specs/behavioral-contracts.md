@@ -7,7 +7,7 @@ Declarative specifications defining the state machine and boundary conditions of
 ### Scenario: Successful transcription of valid audio payload
 
 ```gherkin
-Given the stt-daemon is running on 127.0.0.1:3030
+Given the dyt-daemon is running on 127.0.0.1:3030
 And the configured ModelProvider is successfully loaded into memory
 When a POST request is received at /transcribe
 And the request body contains a valid 16kHz mono WAV file
@@ -21,7 +21,7 @@ And the mutex lock is released
 ### Scenario: Graceful handling of invalid audio formats
 
 ```gherkin
-Given the stt-daemon is running
+Given the dyt-daemon is running
 When a POST request is received at /transcribe with an invalid or corrupt audio payload
 Then the daemon rejects the payload before inference begins
 And the daemon returns an HTTP 400 Bad Request status
@@ -33,16 +33,16 @@ And the daemon remains alive and ready for the next request
 ### Scenario: End-to-end dictation capture and clipboard population
 
 ```gherkin
-Given the stt-cli is executed with the --record flag
+Given the dyt-cli is executed with the --record flag
 When the application binds to the default OS audio input device via cpal
 Then the CLI begins recording audio samples to an in-memory buffer
 When the user inputs a termination signal (e.g., standard input newline)
 Then the audio stream is instantly halted
 And the buffer is encoded into a WAV payload
-And the payload is transmitted via HTTP POST to the stt-daemon
-When the stt-cli receives the transcribed string
+And the payload is transmitted via HTTP POST to the dyt-daemon
+When the dyt-cli receives the transcribed string
 Then the string is injected into the operating system's primary clipboard
-And the stt-cli process terminates with exit code 0
+And the dyt-cli process terminates with exit code 0
 ```
 
 ## Feature: Neovim Plugin Integration
@@ -50,7 +50,7 @@ And the stt-cli process terminates with exit code 0
 ### Scenario: Successful end-to-end dictation from Neovim
 
 ```gherkin
-Given the stt-daemon is running
+Given the dyt-daemon is running
 And the dyt binary is on PATH in the Neovim environment
 And the Neovim plugin is loaded
 When the user presses the configured keymap (<leader>v by default)
@@ -80,7 +80,7 @@ And the plugin is immediately ready for another invocation
 
 ```gherkin
 Given the dyt binary is on PATH
-And the stt-daemon is not running
+And the dyt-daemon is not running
 When the user presses the configured keymap
 Then a floating terminal window opens
 And dyt exits with a non-zero exit code
