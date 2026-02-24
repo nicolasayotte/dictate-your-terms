@@ -496,6 +496,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "dyt-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arboard",
+ "clap",
+ "cpal",
+ "hound",
+ "reqwest",
+ "ringbuf",
+]
+
+[[package]]
+name = "dyt-daemon"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "dirs",
+ "hound",
+ "reqwest",
+ "serde",
+ "tokio",
+ "toml",
+ "tower",
+ "tracing",
+ "tracing-subscriber",
+ "whisper-rs",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1743,37 +1774,6 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
-
-[[package]]
-name = "stt-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "arboard",
- "clap",
- "cpal",
- "hound",
- "reqwest",
- "ringbuf",
-]
-
-[[package]]
-name = "stt-daemon"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "dirs",
- "hound",
- "reqwest",
- "serde",
- "tokio",
- "toml",
- "tower",
- "tracing",
- "tracing-subscriber",
- "whisper-rs",
-]
 
 [[package]]
 name = "syn"

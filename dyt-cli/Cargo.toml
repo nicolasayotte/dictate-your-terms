@@ -1,5 +1,5 @@
 [package]
-name = "stt-cli"
+name = "dyt-cli"
 version = "0.1.0"
 edition = "2021"
 description = "Capture client for DictateYourTerms — record, transcribe, clipboard inject"

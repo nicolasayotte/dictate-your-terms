@@ -1,11 +1,11 @@
 [package]
-name = "stt-daemon"
+name = "dyt-daemon"
 version = "0.1.0"
 edition = "2021"
 description = "Persistent inference engine for DictateYourTerms — keeps the STT model hot in memory"
 
 [[bin]]
-name = "stt-daemon"
+name = "dyt-daemon"
 path = "src/main.rs"
 
 [dependencies]
