@@ -12,6 +12,10 @@ path = "src/main.rs"
 name = "dyt-smoke"
 path = "src/smoke.rs"
 
+[[bin]]
+name = "dyt-record-fixture"
+path = "src/record_fixture.rs"
+
 [dependencies]
 cpal = "0.15"
 ringbuf = "0.4"
