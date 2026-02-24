@@ -51,11 +51,43 @@ impl super::ModelProvider for WhisperCppProvider {
 }
 
 /// Expand ~ to the user's home directory.
-fn shellexpand_path(path: &str) -> String {
+pub(crate) fn shellexpand_path(path: &str) -> String {
     if let Some(stripped) = path.strip_prefix("~/") {
         if let Some(home) = dirs::home_dir() {
             return home.join(stripped).to_string_lossy().to_string();
         }
     }
     path.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::shellexpand_path;
+
+    #[test]
+    fn shellexpand_tilde() {
+        let result = shellexpand_path("~/models/ggml.bin");
+        assert!(
+            !result.starts_with('~'),
+            "expected tilde expansion, got: {result}"
+        );
+        assert!(
+            result.ends_with("models/ggml.bin") || result.ends_with("models\\ggml.bin"),
+            "expected suffix 'models/ggml.bin', got: {result}"
+        );
+        if let Some(home) = dirs::home_dir() {
+            let home_str = home.to_string_lossy();
+            assert!(
+                result.starts_with(home_str.as_ref()),
+                "expected result to start with home dir {home_str:?}, got: {result}"
+            );
+        }
+    }
+
+    #[test]
+    fn shellexpand_absolute_unchanged() {
+        let path = "/abs/path/model.bin";
+        let result = shellexpand_path(path);
+        assert_eq!(result, path, "absolute path should pass through unchanged");
+    }
 }

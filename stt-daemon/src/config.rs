@@ -56,3 +56,46 @@ fn config_path() -> PathBuf {
         PathBuf::from("config.toml")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Config;
+
+    #[test]
+    fn defaults_applied() {
+        let toml_str = "[server]\n[engine]\nmodel_path = \"x\"\n";
+        let config: Config = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.server.host, "127.0.0.1");
+        assert_eq!(config.server.port, 3030);
+        assert_eq!(config.engine.provider, "whisper_cpp");
+        assert_eq!(config.engine.threads, 4);
+        assert_eq!(config.engine.model_path, "x");
+    }
+
+    #[test]
+    fn full_config_parsed() {
+        let toml_str = r#"
+[server]
+host = "0.0.0.0"
+port = 9090
+
+[engine]
+provider = "onnx"
+model_path = "/models/large.bin"
+threads = 8
+"#;
+        let config: Config = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.server.host, "0.0.0.0");
+        assert_eq!(config.server.port, 9090);
+        assert_eq!(config.engine.provider, "onnx");
+        assert_eq!(config.engine.model_path, "/models/large.bin");
+        assert_eq!(config.engine.threads, 8);
+    }
+
+    #[test]
+    fn invalid_toml_errors() {
+        let bad = "this is not valid toml ][[[";
+        let result = toml::from_str::<Config>(bad);
+        assert!(result.is_err(), "expected Err for malformed TOML, got Ok");
+    }
+}
