@@ -1,6 +1,6 @@
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
-use stt_daemon::provider::ModelProvider;
+use dyt_daemon::provider::ModelProvider;
 use tower::ServiceExt;
 
 struct MockProvider {
@@ -41,7 +41,7 @@ fn make_wav_bytes() -> Vec<u8> {
 #[tokio::test]
 async fn transcribe_ok() {
     let mock = MockProvider { reply: "hello" };
-    let app = stt_daemon::server::build_router(Box::new(mock));
+    let app = dyt_daemon::server::build_router(Box::new(mock));
 
     let wav = make_wav_bytes();
     let request = Request::builder()
@@ -62,7 +62,7 @@ async fn transcribe_ok() {
 #[tokio::test]
 async fn transcribe_bad_body() {
     let mock = MockProvider { reply: "irrelevant" };
-    let app = stt_daemon::server::build_router(Box::new(mock));
+    let app = dyt_daemon::server::build_router(Box::new(mock));
 
     let request = Request::builder()
         .method("POST")
@@ -77,7 +77,7 @@ async fn transcribe_bad_body() {
 
 #[tokio::test]
 async fn transcribe_provider_error() {
-    let app = stt_daemon::server::build_router(Box::new(FailProvider));
+    let app = dyt_daemon::server::build_router(Box::new(FailProvider));
 
     let wav = make_wav_bytes();
     let request = Request::builder()

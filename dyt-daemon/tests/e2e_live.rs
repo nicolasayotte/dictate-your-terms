@@ -26,7 +26,7 @@ async fn test_live_transcription() {
         .body(wav)
         .send()
         .await
-        .expect("failed to connect to stt-daemon — is it running on 127.0.0.1:3030?");
+        .expect("failed to connect to dyt-daemon — is it running on 127.0.0.1:3030?");
 
     assert_eq!(
         response.status(),
