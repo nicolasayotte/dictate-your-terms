@@ -88,22 +88,41 @@ sudo apt install build-essential cmake pkg-config libclang-dev \
   libx11-dev libxcursor-dev libxrandr-dev libxi-dev
 ```
 
+## Automated Setup
+
+Setup scripts handle model download and config creation interactively:
+
+**Linux/macOS:**
+```bash
+./scripts/setup.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+.\scripts\setup.ps1
+```
+
+The script will:
+1. Optionally install system dependencies (apt packages / winget)
+2. Let you choose a whisper model size
+3. Download the model to `~/.models/` (Linux) or `%USERPROFILE%\.models\` (Windows)
+4. Create and configure `config.toml` with the correct model path
+5. Optionally build and install `dyt-daemon` and `dyt` to your PATH
+
+All optional steps default to **no** — just press Enter to skip.
+
 ## Quickstart
 
 ```bash
-# 1. Build both crates
-cargo build --release
+# 1. Run the setup script (handles deps, model, config, and binary install)
+./scripts/setup.sh          # Linux/macOS
+# .\scripts\setup.ps1       # Windows (PowerShell)
 
-# 2. Set up daemon config
-mkdir -p ~/.config/dyt
-cp config/default.toml ~/.config/dyt/config.toml
-# Edit model_path to point at your GGML model file
+# 2. Start the daemon
+dyt-daemon
 
-# 3. Start the daemon
-./bin/dyt-daemon
-
-# 4. In another terminal — record and transcribe
-./bin/dyt-record
+# 3. In another terminal — record and transcribe
+dyt --record
 # Speak, then press Enter. Transcript lands on your clipboard.
 ```
 
@@ -195,6 +214,7 @@ config/                # example config
 specs/                 # architecture specs and behavioral contracts
 docs/                  # integration guides
 bin/                   # convenience shell scripts
+scripts/               # setup scripts (model download + config)
 ```
 
 ## License
