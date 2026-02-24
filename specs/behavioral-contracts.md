@@ -44,3 +44,57 @@ When the stt-cli receives the transcribed string
 Then the string is injected into the operating system's primary clipboard
 And the stt-cli process terminates with exit code 0
 ```
+
+## Feature: Neovim Plugin Integration
+
+### Scenario: Successful end-to-end dictation from Neovim
+
+```gherkin
+Given the stt-daemon is running
+And the dyt binary is on PATH in the Neovim environment
+And the Neovim plugin is loaded
+When the user presses the configured keymap (<leader>v by default)
+Then a floating terminal window opens running dyt --record
+When the user speaks and presses Enter in the floating terminal
+Then the terminal process exits with code 0
+And the floating window closes automatically
+And the plugin reads the system clipboard
+And the transcript is inserted at the cursor position in the originating buffer
+And a success notification is shown if notify = true
+```
+
+### Scenario: Graceful handling of missing dyt binary
+
+```gherkin
+Given the dyt binary is not on PATH in the Neovim environment
+When the user presses the configured keymap
+Then a floating terminal window opens
+And termopen raises an error (E475) which the plugin catches via pcall
+And the floating window is closed
+And the plugin state is fully reset
+And an error notification is shown: "Failed to start dyt. Is it installed and on PATH?"
+And the plugin is immediately ready for another invocation
+```
+
+### Scenario: Graceful handling of daemon not running
+
+```gherkin
+Given the dyt binary is on PATH
+And the stt-daemon is not running
+When the user presses the configured keymap
+Then a floating terminal window opens
+And dyt exits with a non-zero exit code
+And the floating window closes automatically
+And an error notification is shown containing the exit code
+And the plugin state is fully reset
+```
+
+### Scenario: Re-entrancy guard
+
+```gherkin
+Given a recording session is already active (floating terminal is open)
+When the user presses the configured keymap a second time
+Then no second floating terminal is opened
+And no second dyt process is spawned
+And a warning notification is shown: "Already recording."
+```
