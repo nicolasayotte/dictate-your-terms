@@ -18,7 +18,8 @@ Hotkey
 │  drain thread               │                                     │                              │
 │    └─> ringbuf Consumer     │                                     │  handler:                    │
 │    └─> mono conversion      │                                     │    decode WAV → f32          │
-│    └─> Vec<f32> accumulate  │                                     │    lock + run inference      │
+│    └─> Vec<f32> accumulate  │                                     │    spawn_blocking            │
+│    lock + run inference      │
 │                             │                                     │    return plain text         │
 │  encode.rs                  │                                     │                              │
 │    └─> resample to 16kHz    │                                     │                              │
@@ -46,7 +47,7 @@ Hotkey
 
 6. **Server decode** — The axum handler reads the body, decodes WAV via hound (supports F32 and I16), converts stereo→mono, and resamples to 16 kHz if needed.
 
-7. **Inference** — Handler acquires `Arc<Mutex<Box<dyn ModelProvider>>>`, calls `transcribe(&[f32])`, releases mutex.
+7. **Inference** — Handler clones the `Arc`, dispatches to `tokio::task::spawn_blocking`, acquires the mutex on a dedicated blocking thread, and calls `transcribe(&[f32])`. Inference duration is logged at INFO level.
 
 8. **Response** — Returns plain-text transcription as `text/plain`.
 
@@ -108,7 +109,7 @@ port = 3030          # default
 [engine]
 provider = "whisper_cpp"               # default
 model_path = "/path/to/ggml-model.bin" # required
-threads = 4                            # default
+threads = 4                            # optional — defaults to available CPU core count
 ```
 
 ## Process Lifecycle
@@ -140,6 +141,7 @@ hotkey press
 | Clipboard | X11 / Wayland via arboard | Win32 clipboard via arboard |
 | Config path | `~/.config/dyt/` via `dirs` crate | `%APPDATA%\dyt\` via `dirs` crate |
 | Release binary | ubuntu-22.04 runner, dynamic glibc | windows-latest, MSVC toolchain |
+| BLAS acceleration | auto-detected via pkg-config | OpenBLAS via vcpkg (`BLAS_INCLUDE_DIRS` required) |
 
 ## Cross-References
 

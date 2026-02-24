@@ -21,7 +21,7 @@ edition = "2021"
 |-------|---------|------|
 | `axum` | 0.8 | HTTP framework — routes, extractors, response types |
 | `tokio` | 1 (full) | Async runtime underlying axum |
-| `whisper-rs` | 0.14 | Safe Rust FFI bindings to whisper.cpp (C++ STT library) |
+| `whisper-rs` | 0.14 | Safe Rust FFI bindings to whisper.cpp; `openblas` feature enabled on Windows |
 | `hound` | 3.5 | WAV decode from `Cursor<&[u8]>` in the request handler |
 | `serde` | 1 | Derive macros for config deserialization |
 | `toml` | 0.8 | TOML config file parsing |
@@ -53,6 +53,10 @@ The cpal callback runs on a real-time OS audio thread. Mutexes can block (priori
 ### whisper-rs (whisper.cpp FFI) over pure-Rust models
 
 whisper.cpp is the reference implementation with the best quantization support, SIMD acceleration, and ggml model compatibility. `whisper-rs` provides safe Rust bindings. The `ModelProvider` trait abstracts the backend, keeping it swappable without affecting the HTTP API.
+
+On Windows, the `openblas` feature is enabled via `[target.'cfg(windows)'.dependencies]`, linking against OpenBLAS for BLAS-accelerated matrix ops. Without it, whisper.cpp falls back to a naive C++ path that is ~10x slower. On Linux/macOS, whisper.cpp auto-detects system BLAS via pkg-config — no feature flag needed.
+
+The transcription call is dispatched via `tokio::task::spawn_blocking` to avoid blocking the async executor during the multi-second inference. Inference duration is logged at INFO level for benchmarking.
 
 ### reqwest (async) in the CLI
 
