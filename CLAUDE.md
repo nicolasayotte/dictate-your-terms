@@ -64,6 +64,14 @@ Environment variables set by the shell:
 - Daemon resamples all incoming audio to 16 kHz mono f32 before inference (linear interpolation)
 - Default bind: `127.0.0.1:3030` — localhost only, no auth
 - `nix develop` is required; do not attempt manual dependency installs
+- **hound in-memory WAV** (`hound = "3.5"`): use the pattern where the writer owns the `Cursor` — construct with `Cursor::new(&mut buf)`, call `finalize()`, then return `buf`. Do NOT specify `writer.into_inner()` when `WavWriter` was given `&mut cursor` — that requires an explicit scope block. Preferred pattern (matches `encode.rs`):
+  ```rust
+  let mut buf = Vec::new();
+  let mut writer = hound::WavWriter::new(std::io::Cursor::new(&mut buf), spec)?;
+  writer.write_sample(s)?;
+  writer.finalize()?;
+  // buf now contains complete WAV bytes
+  ```
 
 ## Workflow
 
