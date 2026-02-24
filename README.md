@@ -29,6 +29,28 @@ Two Rust binaries, split for latency:
 - [Rust toolchain](https://rustup.rs/) (rustup)
 - A whisper.cpp GGML model file (e.g. `ggml-base.en.bin`)
 
+**Downloading a model:**
+
+```bash
+# Create the models directory
+mkdir -p ~/.models
+
+# Download the base English model (~142 MB) directly from Hugging Face
+curl -L -o ~/.models/ggml-base.en.bin \
+  "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
+```
+
+Other available sizes (trade accuracy for speed):
+
+| Model | File | Size | Notes |
+|-------|------|------|-------|
+| `tiny.en` | `ggml-tiny.en.bin` | ~75 MB | Fastest, lowest accuracy |
+| `base.en` | `ggml-base.en.bin` | ~142 MB | Good balance (recommended) |
+| `small.en` | `ggml-small.en.bin` | ~466 MB | Better accuracy |
+| `medium.en` | `ggml-medium.en.bin` | ~1.5 GB | High accuracy, slower |
+
+Replace `base.en` in the URL and filename with your chosen model name. After downloading, set `model_path` in `~/.config/dyt/config.toml` to the file's location.
+
 **Ubuntu/Debian** — install system dependencies:
 
 ```bash
