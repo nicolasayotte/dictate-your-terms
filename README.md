@@ -78,7 +78,17 @@ After downloading, set `model_path` in your config to the file's absolute path (
 
 3. **Visual Studio Build Tools** — C/C++ compiler (`cl.exe`). Install the "Desktop development with C++" workload via the [Visual Studio Build Tools installer](https://visualstudio.microsoft.com/visual-cpp-build-tools/).
 
-Open a **new terminal** after installing so PATH changes take effect. WASAPI (audio) and the Windows clipboard are available natively — no extra packages needed.
+4. **OpenBLAS** — required for CPU acceleration (without it, inference is ~10x slower). Install via [vcpkg](https://github.com/microsoft/vcpkg):
+   ```powershell
+   git clone https://github.com/microsoft/vcpkg.git $env:USERPROFILE\vcpkg
+   & "$env:USERPROFILE\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
+   vcpkg install openblas:x64-windows
+   vcpkg integrate install
+   setx VCPKG_ROOT "$env:USERPROFILE\vcpkg"
+   setx BLAS_INCLUDE_DIRS "$env:USERPROFILE\vcpkg\installed\x64-windows\include"
+   ```
+
+Open a **new terminal** after installing so PATH changes take effect. WASAPI (audio) and the Windows clipboard are available natively.
 
 **Ubuntu/Debian** — install system dependencies:
 
@@ -104,10 +114,11 @@ Setup scripts handle model download and config creation interactively:
 
 The script will:
 1. Optionally install system dependencies (apt packages / winget)
-2. Let you choose a whisper model size
-3. Download the model to `~/.models/` (Linux) or `%USERPROFILE%\.models\` (Windows)
-4. Create and configure `config.toml` with the correct model path
-5. Optionally build and install `dyt-daemon` and `dyt` to your PATH
+2. **Windows only:** optionally install OpenBLAS via vcpkg and set `BLAS_INCLUDE_DIRS`
+3. Let you choose a whisper model size
+4. Download the model to `~/.models/` (Linux) or `%USERPROFILE%\.models\` (Windows)
+5. Create and configure `config.toml` with the correct model path
+6. Optionally build and install `dyt-daemon` and `dyt` to your PATH
 
 All optional steps default to **no** — just press Enter to skip.
 
@@ -187,13 +198,67 @@ host = "127.0.0.1"
 provider = "whisper_cpp"
 model_path = "~/.models/ggml-base.en.bin"       # Linux/macOS
 # model_path = "C:\\Users\\<USERNAME>\\.models\\ggml-base.en.bin"  # Windows
-threads = 4
+threads = 4          # optional — defaults to auto-detected CPU core count
 ```
 
 ## Integrations
 
-- **Neovim** — [dyt.nvim](https://github.com/nicolasayotte/dyt.nvim)
-- **Tmux** — [dyt.tmux](https://github.com/nicolasayotte/dyt.tmux)
+Each integration opens a small recording surface, runs `dyt --record`, then inserts the transcript directly into the editor or pane — no manual copy/paste.
+
+### Neovim — [dyt.nvim](https://github.com/nicolasayotte/dyt.nvim)
+
+Opens a centered floating terminal. Speak, press Enter, and the transcript is inserted at the cursor. Works from normal and insert mode.
+
+```lua
+-- lazy.nvim (minimal)
+{ 'nicolasayotte/dyt.nvim', opts = {} }
+
+-- Full options (all optional, defaults shown)
+{
+  'nicolasayotte/dyt.nvim',
+  keys = { { '<leader>v', desc = 'Voice dictation', mode = { 'n', 'i' } } },
+  opts = {
+    keymap     = '<leader>v',
+    daemon     = 'http://127.0.0.1:3030',
+    win_width  = 0.5,
+    win_height = 10,
+    border     = 'rounded',
+    notify     = true,
+  },
+}
+```
+
+### Tmux — [dyt.tmux](https://github.com/nicolasayotte/dyt.tmux)
+
+Opens a popup (`display-popup`, requires tmux ≥ 3.2). After recording, the transcript is pasted into the originating pane.
+
+```tmux
+# ~/.tmux.conf — TPM install
+set -g @plugin 'nicolasayotte/dyt.tmux'
+
+# Optional config (before TPM init line)
+set -g @dyt-key    'v'                      # binds as prefix + v
+set -g @dyt-daemon 'http://127.0.0.1:3030'
+```
+
+### WezTerm — [dyt.wezterm](https://github.com/nicolasayotte/dyt.wezterm)
+
+Opens a bottom split. After recording, the transcript is sent to the originating pane via `wezterm cli send-text`.
+
+```lua
+-- wezterm.lua
+local dyt = wezterm.plugin.require 'https://github.com/nicolasayotte/dyt.wezterm'
+dyt.apply_to_config(config)
+
+-- Full options (all optional, defaults shown)
+dyt.apply_to_config(config, {
+  key        = 'v',
+  mods       = 'CTRL|SHIFT',
+  daemon     = 'http://127.0.0.1:3030',
+  split_size = 0.2,
+  notify     = true,
+})
+```
 
 ## Project Structure
 
