@@ -37,23 +37,21 @@ sudo apt install build-essential cmake pkg-config libclang-dev \
   libx11-dev libxcursor-dev libxrandr-dev libxi-dev
 ```
 
-**Windows** — no extra dependencies. WASAPI and clipboard are available natively.
-
 ## Quickstart
 
 ```bash
 # 1. Build both crates
 cargo build --release
 
-# 3. Set up daemon config
+# 2. Set up daemon config
 mkdir -p ~/.config/dyt
 cp config/default.toml ~/.config/dyt/config.toml
 # Edit model_path to point at your GGML model file
 
-# 4. Start the daemon
+# 3. Start the daemon
 ./bin/dyt-daemon
 
-# 5. In another terminal — record and transcribe
+# 4. In another terminal — record and transcribe
 ./bin/dyt-record
 # Speak, then press Enter. Transcript lands on your clipboard.
 ```
@@ -106,7 +104,7 @@ cargo run --bin dyt-smoke
 
 ## Configuration
 
-Daemon config lives at `~/.config/dyt/config.toml` (Linux/XDG) or `%APPDATA%\dyt\config.toml` (Windows).
+Daemon config lives at `~/.config/dyt/config.toml` (XDG).
 
 ```toml
 [server]
@@ -119,9 +117,10 @@ model_path = "~/.models/ggml-base.en.bin"
 threads = 4
 ```
 
-## Editor Integrations
+## Integrations
 
-- **Neovim** — plugin at `editors/nvim/` (see `docs/integrations.md`)
+- **Neovim** — [dyt.nvim](https://github.com/nicolasayotte/dyt.nvim)
+- **Tmux** — [dyt.tmux](https://github.com/nicolasayotte/dyt.tmux)
 
 ## Project Structure
 
@@ -139,7 +138,6 @@ dyt-cli/src/
   smoke.rs             # mic → WAV smoke test
 
 config/                # example config
-editors/               # editor plugins
 specs/                 # architecture specs and behavioral contracts
 docs/                  # integration guides
 bin/                   # convenience shell scripts
