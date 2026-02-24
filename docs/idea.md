@@ -58,10 +58,10 @@ Gemini said
 
 Building this entirely in Rust is the optimal move. You get a type-safe, highly concurrent architecture with a microscopic memory footprint compared to a Python equivalent, and it compiles cleanly as native binaries for both your Windows environment and Ubuntu.
 
-To achieve maximum efficiency and modularity, we will structure this as a Cargo workspace with two distinct crates: a persistent inference daemon (stt-daemon) and a lightweight capture client (stt-cli).
+To achieve maximum efficiency and modularity, we will structure this as a Cargo workspace with two distinct crates: a persistent inference daemon (dyt-daemon) and a lightweight capture client (dyt-cli).
 
 Here is the architectural blueprint for the Rust implementation.
-1. The Inference Daemon (stt-daemon)
+1. The Inference Daemon (dyt-daemon)
 
 This process runs in the background, keeping the speech-to-text model hot in RAM/VRAM to ensure zero-latency transcription.
 
@@ -75,7 +75,7 @@ The Rust Stack:
 
 Architecture:
 You initialize the WhisperContext once on startup, wrap it in an Arc<Mutex<>> (or let Axum handle the shared state), and expose a single POST /transcribe endpoint. When the endpoint receives an audio payload, it runs the inference lock and returns the raw string.
-2. The Capture Client (stt-cli)
+2. The Capture Client (dyt-cli)
 
 This is the command-line tool you trigger via a hotkey in Neovim, WezTerm, or Tmux. It handles the raw hardware interaction across operating systems.
 
@@ -93,17 +93,17 @@ The System Flow
 
     You are in Neovim (Ubuntu or Windows). You press <leader>v.
 
-    A terminal split briefly opens, running stt-cli --record.
+    A terminal split briefly opens, running dyt-cli --record.
 
     cpal captures your voice detailing a complex architectural constraint.
 
     You hit Enter to end the capture.
 
-    stt-cli fires the payload to stt-daemon (running whisper-rs).
+    dyt-cli fires the payload to dyt-daemon (running whisper-rs).
 
     The daemon responds in ~400ms.
 
-    stt-cli pipes the text to the clipboard and exits.
+    dyt-cli pipes the text to the clipboard and exits.
 
     Your Neovim Lua script immediately pastes the clipboard contents into your buffer.
 
@@ -114,8 +114,8 @@ Ini, TOML
 
 [workspace]
 members = [
-    "stt-daemon",
-    "stt-cli"
+    "dyt-daemon",
+    "dyt-cli"
 ]
 
 This modular approach ensures that if you ever want to swap out the local Whisper model for a different API or model in the future, your client-side capture and editor integration remain completely untouched.
@@ -166,7 +166,7 @@ Gemini said
 This two-tier, client-server architecture strictly decouples the heavyweight machine learning context from the lightweight hardware interaction. This guarantees a modular, type-safe system that executes instantly and seamlessly bridges both your Windows and Ubuntu environments.
 
 Here is the deep dive into the architecture, technology stack, and behavioral specifications.
-App 1: stt-daemon (The Inference Engine)
+App 1: dyt-daemon (The Inference Engine)
 
 The daemon is a persistent background process. Its sole responsibility is to hold the machine learning model hot in memory and process incoming audio arrays as fast as possible.
 
@@ -200,7 +200,7 @@ model_path = "~/.models/ggml-base.en.bin"
 threads = 4
 
 If a faster local model drops next year, you simply write a new struct that implements ModelProvider, point the config.toml to it, and restart the daemon. The API contract and the CLI remain completely untouched.
-App 2: stt-cli (The Capture Client)
+App 2: dyt-cli (The Capture Client)
 
 The CLI is a transient, highly optimized binary triggered by a hotkey. It handles OS-level hardware bindings and network transmission, then immediately terminates.
 
@@ -213,7 +213,7 @@ Tech Choices:
     Clipboard Management: arboard. It handles the wildly different clipboard architectures across Windows, X11, and Wayland to ensure the transcribed text is perfectly staged for your terminal or editor buffer.
 
 Architecture & Setup:
-When stt-cli --record is executed, it queries cpal for the default system microphone. It spawns a thread-safe ring buffer and begins pushing raw f32 audio samples into it. It simultaneously listens to stdin (or via crossterm) for a termination signal—like hitting the Enter key.
+When dyt-cli --record is executed, it queries cpal for the default system microphone. It spawns a thread-safe ring buffer and begins pushing raw f32 audio samples into it. It simultaneously listens to stdin (or via crossterm) for a termination signal—like hitting the Enter key.
 
 Upon termination, the capture thread halts. The raw buffer is serialized entirely in-memory into a WAV format, packaged as a multipart HTTP request, and fired to 127.0.0.1:3030/transcribe. Once the string response is received, arboard overwrites the system clipboard, and the binary exits with code 0.
 Declarative Specifications (Behavioral Contracts)
@@ -223,7 +223,7 @@ Feature: Daemon State Management and Inference
 Gherkin
 
 Scenario: Successful transcription of valid audio payload
-  Given the stt-daemon is running on 127.0.0.1:3030
+  Given the dyt-daemon is running on 127.0.0.1:3030
   And the configured ModelProvider is successfully loaded into memory
   When a POST request is received at /transcribe
   And the request body contains a valid 16kHz mono WAV file
@@ -234,7 +234,7 @@ Scenario: Successful transcription of valid audio payload
   And the mutex lock is released
 
 Scenario: Graceful handling of invalid audio formats
-  Given the stt-daemon is running
+  Given the dyt-daemon is running
   When a POST request is received at /transcribe with an invalid or corrupt audio payload
   Then the daemon rejects the payload before inference begins
   And the daemon returns an HTTP 400 Bad Request status
@@ -244,16 +244,16 @@ Feature: CLI Hardware Capture and Injection
 Gherkin
 
 Scenario: End-to-end dictation capture and clipboard population
-  Given the stt-cli is executed with the --record flag
+  Given the dyt-cli is executed with the --record flag
   When the application binds to the default OS audio input device via cpal
   Then the CLI begins recording audio samples to an in-memory buffer
   When the user inputs a termination signal (e.g., standard input newline)
   Then the audio stream is instantly halted
   And the buffer is encoded into a WAV payload
-  And the payload is transmitted via HTTP POST to the stt-daemon
-  When the stt-cli receives the transcribed string
+  And the payload is transmitted via HTTP POST to the dyt-daemon
+  When the dyt-cli receives the transcribed string
   Then the string is injected into the operating system's primary clipboard
-  And the stt-cli process terminates with exit code 0
+  And the dyt-cli process terminates with exit code 0
 
 Would you like to start by writing the ModelProvider trait definition and the Axum routing logic for the daemon, or should we map out the cpal thread-safe audio buffer for the CLI first?
 You said
@@ -275,8 +275,8 @@ Your hands never have to leave the keyboard.
 
 TermDictate is a Cargo workspace comprising two specialized crates:
 Crate	Role	Tech Stack	Description
-stt-daemon	Inference Engine	axum, tokio, whisper-rs, hound	A persistent, lightweight background server. It holds the STT model (like ggml-base.en.bin) hot in RAM/VRAM, eliminating cold starts. It exposes a single local API endpoint (POST /transcribe) to process audio arrays instantly.
-stt-cli	Capture Client	cpal, reqwest, arboard	A transient, highly optimized CLI binary. Triggered by a hotkey, it captures raw f32 audio from your OS default mic, fires it to the daemon, dumps the returned text to the system clipboard, and exits cleanly.
+dyt-daemon	Inference Engine	axum, tokio, whisper-rs, hound	A persistent, lightweight background server. It holds the STT model (like ggml-base.en.bin) hot in RAM/VRAM, eliminating cold starts. It exposes a single local API endpoint (POST /transcribe) to process audio arrays instantly.
+dyt-cli	Capture Client	cpal, reqwest, arboard	A transient, highly optimized CLI binary. Triggered by a hotkey, it captures raw f32 audio from your OS default mic, fires it to the daemon, dumps the returned text to the system clipboard, and exits cleanly.
 ✨ Key Features
 
     Zero-Latency Inference: Because the ML model stays loaded in the daemon, transcription begins the exact millisecond you stop speaking.
@@ -324,14 +324,14 @@ threads = 4
 Run the daemon in a background terminal pane or set it up as a system service:
 Bash
 
-./target/release/stt-daemon --config ~/.config/termdictate/config.toml
+./target/release/dyt-daemon --config ~/.config/termdictate/config.toml
 
 2. Trigger the Capture Client
 
 Bind the CLI to a hotkey in your window manager, terminal emulator, or editor. When triggered, the CLI will record until it receives a termination signal (e.g., hitting Enter), after which it will transcribe and copy the text to your clipboard.
 Bash
 
-./target/release/stt-cli --record
+./target/release/dyt-cli --record
 
 Neovim Integration Example
 
@@ -340,8 +340,8 @@ Lua
 
 vim.keymap.set({'n', 'i'}, '<leader>v', function()
     print("Listening (Press Enter in terminal to stop)...")
-    -- Spawn the stt-cli process
-    vim.fn.system('stt-cli --record')
+    -- Spawn the dyt-cli process
+    vim.fn.system('dyt-cli --record')
     
     -- Pull the result from the system clipboard
     local transcript = vim.fn.getreg('+')
@@ -360,7 +360,7 @@ MIT
 
 This gives any developer landing on the repo an immediate, clear understanding of exactly why this tool exists and how it fits into a high-performance workflow.
 
-Would you like to initialize the Cargo workspace and start writing the stt-daemon configuration loading logic, or would you prefer to start with the cpal audio stream in the stt-cli?
+Would you like to initialize the Cargo workspace and start writing the dyt-daemon configuration loading logic, or would you prefer to start with the cpal audio stream in the dyt-cli?
 You said
 
 Dictate your terms. Is better. DictateYourTerms?
@@ -380,7 +380,7 @@ Imagine hitting <leader>v and your Neovim config just silently executes dyt --re
 
 Let's officially lock in DictateYourTerms as the project name.
 
-Now that the branding is settled, would you like to initialize the Cargo workspace for DictateYourTerms and start writing the stt-daemon configuration loading logic, or would you prefer to start with the cpal audio stream capture in the stt-cli?
+Now that the branding is settled, would you like to initialize the Cargo workspace for DictateYourTerms and start writing the dyt-daemon configuration loading logic, or would you prefer to start with the cpal audio stream capture in the dyt-cli?
 You said
 
 What's the most valuable part of the project to map next?
@@ -529,7 +529,7 @@ Here is the mission statement to drive every single engineering decision for the
 
 This single sentence acts as the absolute filter for every spec, dependency, and feature request:
 
-    "Zero-latency" dictates that we reject cloud APIs and cold-started Python scripts, forcing the persistent stt-daemon architecture.
+    "Zero-latency" dictates that we reject cloud APIs and cold-started Python scripts, forcing the persistent dyt-daemon architecture.
 
     "Cross-platform" dictates the strict use of cpal and arboard in Rust, ensuring the exact same binary behavior on both your Windows host and Ubuntu environments.
 

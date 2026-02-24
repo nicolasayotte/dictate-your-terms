@@ -10,15 +10,15 @@ Two Rust binaries, split for latency:
 
 | Crate | Binary | Role |
 |-------|--------|------|
-| `stt-daemon` | `stt-daemon` | Persistent inference server (axum + whisper-rs). Keeps the STT model hot in RAM. |
-| `stt-cli` | `dyt` | Transient capture client (cpal + ringbuf). Records mic, sends WAV to daemon, copies transcript to clipboard. |
+| `dyt-daemon` | `dyt-daemon` | Persistent inference server (axum + whisper-rs). Keeps the STT model hot in RAM. |
+| `dyt-cli` | `dyt` | Transient capture client (cpal + ringbuf). Records mic, sends WAV to daemon, copies transcript to clipboard. |
 
 ```
   mic ──► dyt (capture + WAV encode)
               │
               │ POST /transcribe (raw WAV bytes)
               ▼
-          stt-daemon (whisper.cpp inference)
+          dyt-daemon (whisper.cpp inference)
               │
               ▼
           plain text ──► clipboard + stdout
@@ -26,18 +26,23 @@ Two Rust binaries, split for latency:
 
 ## Prerequisites
 
-- [Nix](https://nixos.org/download/) with flakes enabled
+- [Rust toolchain](https://rustup.rs/) (rustup)
 - A whisper.cpp GGML model file (e.g. `ggml-base.en.bin`)
 
-All build dependencies (Rust toolchain, whisper.cpp, ALSA, PipeWire, X11 libs) are pinned in `flake.nix` — no manual installs needed.
+**Ubuntu/Debian** — install system dependencies:
+
+```bash
+sudo apt install build-essential cmake pkg-config libclang-dev \
+  libasound2-dev libpipewire-0.3-dev \
+  libx11-dev libxcursor-dev libxrandr-dev libxi-dev
+```
+
+**Windows** — no extra dependencies. WASAPI and clipboard are available natively.
 
 ## Quickstart
 
 ```bash
-# 1. Enter the Nix dev shell
-nix develop
-
-# 2. Build both crates
+# 1. Build both crates
 cargo build --release
 
 # 3. Set up daemon config
@@ -62,7 +67,7 @@ cp config/default.toml ~/.config/dyt/config.toml
 ./bin/dyt-daemon
 
 # Or run directly
-cargo run -p stt-daemon
+cargo run -p dyt-daemon
 ```
 
 The daemon binds to `127.0.0.1:3030` and exposes a single endpoint:
@@ -121,12 +126,12 @@ threads = 4
 ## Project Structure
 
 ```
-stt-daemon/src/
+dyt-daemon/src/
   main.rs              # axum server entrypoint
   provider/            # STT backend implementations
     whisper_cpp.rs     # whisper.cpp via whisper-rs
 
-stt-cli/src/
+dyt-cli/src/
   main.rs              # clap CLI entrypoint
   capture.rs           # cpal mic capture with lock-free ring buffer
   encode.rs            # WAV encoding (hound)

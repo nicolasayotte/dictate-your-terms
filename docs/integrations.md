@@ -41,7 +41,7 @@ Call `require('dyt').setup(opts)` in your Neovim config. All keys are optional; 
 ```lua
 require('dyt').setup({
   keymap     = '<leader>v',              -- trigger in normal and insert mode
-  daemon     = 'http://127.0.0.1:3030',  -- stt-daemon address
+  daemon     = 'http://127.0.0.1:3030',  -- dyt-daemon address
   win_width  = 0.5,                      -- float width as fraction of editor width
   win_height = 10,                       -- float height in rows
   border     = 'rounded',                -- any nvim_open_win border style
@@ -52,7 +52,7 @@ require('dyt').setup({
 | Option       | Type    | Default                       | Description                                          |
 |--------------|---------|-------------------------------|------------------------------------------------------|
 | `keymap`     | string  | `'<leader>v'`                 | Key sequence bound in both normal and insert mode    |
-| `daemon`     | string  | `'http://127.0.0.1:3030'`     | HTTP base URL of the running `stt-daemon`            |
+| `daemon`     | string  | `'http://127.0.0.1:3030'`     | HTTP base URL of the running `dyt-daemon`            |
 | `win_width`  | number  | `0.5`                         | Float width as a fraction of the current editor width|
 | `win_height` | number  | `10`                          | Float height in absolute rows                        |
 | `border`     | string  | `'rounded'`                   | Border style passed to `nvim_open_win`               |
@@ -60,7 +60,7 @@ require('dyt').setup({
 
 ### Prerequisites
 
-- `stt-daemon` must be running before pressing the keymap.
+- `dyt-daemon` must be running before pressing the keymap.
 - The `dyt` binary must be on `PATH` in the environment that launches Neovim. If it is not, the plugin shows `[dyt] Failed to start dyt. Is it installed and on PATH?` and cleans up without crashing.
 
 ### Behavior
