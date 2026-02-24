@@ -19,6 +19,7 @@ Rust workspace (edition 2021). Daemon exposes `POST /transcribe` on `127.0.0.1:3
 - `dyt-daemon/src/provider/` — Backend implementations (`whisper_cpp.rs`); add new engines here
 - `dyt-cli/src/` — CLI: `capture.rs` (cpal), `encode.rs` (hound), `transport.rs` (reqwest), `main.rs` (clap)
 - `config/` — Example `config.toml` for the daemon
+- `scripts/` — Interactive setup scripts (`setup.sh`, `setup.ps1`)
 - `specs/` — Architecture specs and behavioral contracts (authoritative design decisions)
 - `docs/` — Integration guides and design notes
 
@@ -33,7 +34,7 @@ cargo run -p dyt-cli -- --record     # Record and transcribe (needs daemon runni
 cargo run --bin dyt-smoke            # Smoke-test mic → WAV pipeline (no daemon needed)
 ```
 
-See `docs/setup.md` for system dependencies (Ubuntu packages, Windows notes).
+Run `./scripts/setup.sh` (Linux/macOS) or `.\scripts\setup.ps1` (Windows) for interactive first-time setup (deps, model, config, binary install). See `docs/setup.md` for manual steps.
 
 ## Standards
 

@@ -1,6 +1,23 @@
 # Setup
 
-> **AI Context Summary**: Setting up DictateYourTerms requires Rust (via rustup), a GGML-format whisper model file, and system libraries for audio and clipboard. Ubuntu needs several apt packages; Windows needs only the Rust toolchain. The daemon must be running before the CLI can transcribe. Config lives at `~/.config/dyt/config.toml` (Linux) or `%APPDATA%\dyt\config.toml` (Windows).
+> **AI Context Summary**: Setting up DictateYourTerms requires Rust (via rustup), a GGML-format whisper model file, and system libraries for audio and clipboard. Ubuntu needs several apt packages; Windows needs LLVM, CMake, and VS Build Tools. The daemon must be running before the CLI can transcribe. Config lives at `~/.config/dyt/config.toml` (Linux) or `%APPDATA%\dyt\config.toml` (Windows). Interactive setup scripts (`scripts/setup.sh` and `scripts/setup.ps1`) automate all of this.
+
+## Automated Setup (Recommended)
+
+Interactive scripts handle everything in one shot:
+
+```bash
+./scripts/setup.sh      # Linux/macOS
+.\scripts\setup.ps1     # Windows (PowerShell)
+```
+
+Each script optionally installs system dependencies, lets you choose and download a whisper model, writes the config, and optionally runs `cargo install` for both binaries. All optional steps default to **no**.
+
+---
+
+## Manual Setup
+
+Follow the steps below if you prefer to set things up by hand.
 
 ## Prerequisites
 

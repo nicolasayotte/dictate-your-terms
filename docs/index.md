@@ -9,7 +9,7 @@
 
 | Document | Read when you want to… |
 |----------|------------------------|
-| [`docs/setup.md`](./setup.md) | Install dependencies and run for the first time |
+| [`docs/setup.md`](./setup.md) | Install dependencies and run for the first time (see `scripts/` for automated setup) |
 | [`docs/architecture.md`](./architecture.md) | Understand the two-process pipeline |
 | [`docs/tech-stack.md`](./tech-stack.md) | Know which crates are used and why |
 
