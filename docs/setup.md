@@ -45,7 +45,39 @@ sudo apt install build-essential cmake pkg-config libclang-dev \
 
 ### Windows
 
-Install Rust via rustup. WASAPI (audio) and the Windows clipboard API are available natively — no additional packages required. Use the MSVC toolchain (default on Windows).
+Install Rust via rustup. WASAPI (audio) and the Windows clipboard API are available natively. Use the MSVC toolchain (default on Windows).
+
+#### OpenBLAS (Required for CPU acceleration)
+
+The Windows build of `dyt-daemon` links against OpenBLAS via the `whisper-rs` `openblas` feature. Install it using [vcpkg](https://github.com/microsoft/vcpkg):
+
+```powershell
+# Clone and bootstrap vcpkg (skip if already installed)
+git clone https://github.com/microsoft/vcpkg.git $env:USERPROFILE\vcpkg
+& "$env:USERPROFILE\vcpkg\bootstrap-vcpkg.bat" -disableMetrics
+
+# Install OpenBLAS for 64-bit Windows
+vcpkg install openblas:x64-windows
+
+# Integrate with MSBuild/CMake so the whisper.cpp build finds it automatically
+vcpkg integrate install
+```
+
+Set `VCPKG_ROOT` to your vcpkg directory if it is not already set:
+
+```powershell
+[System.Environment]::SetEnvironmentVariable("VCPKG_ROOT", "$env:USERPROFILE\vcpkg", "User")
+```
+
+The `whisper-rs-sys` build script also requires `BLAS_INCLUDE_DIRS` to point to the OpenBLAS headers:
+
+```powershell
+[System.Environment]::SetEnvironmentVariable("BLAS_INCLUDE_DIRS", "$env:VCPKG_ROOT\installed\x64-windows\include", "User")
+```
+
+After installation, `cargo build --release` will pick up OpenBLAS automatically. If the build fails with `BLAS_INCLUDE_DIRS environment variable must be set`, verify `BLAS_INCLUDE_DIRS` is set and points to the vcpkg OpenBLAS include directory.
+
+> **Automated setup:** `.\scripts\setup.ps1` handles all of the above interactively.
 
 ## Build
 
