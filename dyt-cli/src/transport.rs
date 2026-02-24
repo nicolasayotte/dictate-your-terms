@@ -4,7 +4,10 @@ use anyhow::{Context, Result};
 pub fn transcribe(daemon_url: &str, wav_bytes: &[u8]) -> Result<String> {
     let url = format!("{daemon_url}/transcribe");
 
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(120))
+        .build()
+        .context("Failed to build HTTP client")?;
     let response = client
         .post(&url)
         .header("Content-Type", "audio/wav")
