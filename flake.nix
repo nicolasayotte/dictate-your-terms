@@ -26,6 +26,7 @@
 
             # cpal (audio capture)
             alsa-lib
+            pipewire
 
             # arboard (clipboard on Linux)
             libx11
@@ -36,9 +37,12 @@
 
           LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
 
+          ALSA_PLUGIN_DIR = "${pkgs.pipewire}/lib/alsa-lib";
+
           LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
             pkgs.stdenv.cc.cc.lib
             pkgs.alsa-lib
+            pkgs.pipewire
           ];
         };
       });
