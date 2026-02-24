@@ -38,7 +38,9 @@ fn default_provider() -> String {
 }
 
 fn default_threads() -> u16 {
-    4
+    std::thread::available_parallelism()
+        .map(|n| n.get() as u16)
+        .unwrap_or(4)
 }
 
 /// Load config from the standard path: ~/.config/dyt/config.toml
@@ -68,7 +70,7 @@ mod tests {
         assert_eq!(config.server.host, "127.0.0.1");
         assert_eq!(config.server.port, 3030);
         assert_eq!(config.engine.provider, "whisper_cpp");
-        assert_eq!(config.engine.threads, 4);
+        assert!(config.engine.threads >= 1, "threads must be at least 1");
         assert_eq!(config.engine.model_path, "x");
     }
 
