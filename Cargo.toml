@@ -5,3 +5,22 @@ resolver = "2"
 [workspace.package]
 version = "1.1.0"
 edition = "2021"
+
+[profile.release]
+opt-level = 2
+codegen-units = 8
+lto = "thin"
+strip = true
+
+# Workaround: whisper.cpp 1.7.4 has a ~13x perf regression when its ggml
+# backend is compiled with MSVC /O2 (cmake Release config).  This profile
+# keeps Rust code at release optimisation but — because the cmake crate maps
+# any PROFILE value other than "release"/"bench" to cmake Debug — forces
+# whisper-rs-sys to build the C++ side without /O2.  The hand-written AVX2
+# intrinsics in ggml-cpu still run at full speed; only the surrounding scalar
+# code loses compiler optimisation, which is negligible.
+# Linux/macOS are unaffected (GCC/Clang -O3 is fine) and keep using --release.
+[profile.perf]
+inherits = "release"
+opt-level = 3
+codegen-units = 1

@@ -111,18 +111,24 @@ if ($doConfig) {
     Write-Host "Skipping config — keeping existing file." -ForegroundColor Yellow
 }
 
-# ── Build and install binaries (optional) ─────────────────────────────
+# ── Build release binaries (optional) ────────────────────────────────
 $binariesInstalled = $false
-$answer = Read-Host "`nBuild and install dyt binaries to cargo bin? (y/N)"
+$answer = Read-Host "`nBuild release binaries now? (y/N)"
 if ($answer -eq "y") {
-    Write-Host "Installing dyt-daemon..." -ForegroundColor Green
-    cargo install --path "$ProjectRoot\dyt-daemon"
-    Write-Host "Installing dyt (CLI)..." -ForegroundColor Green
-    cargo install --path "$ProjectRoot\dyt-cli"
+    Write-Host "Building release binaries with native CPU optimisations (this may take a while)..." -ForegroundColor Green
+    Push-Location $ProjectRoot
+    if (Get-Command makers -ErrorAction SilentlyContinue) {
+        makers build-greedy
+    } else {
+        $env:RUSTFLAGS = "-C target-cpu=native"
+        cargo build --release
+        Remove-Item Env:\RUSTFLAGS -ErrorAction SilentlyContinue
+    }
+    Pop-Location
     $binariesInstalled = $true
-    Write-Host "Binaries installed to cargo bin." -ForegroundColor Green
+    Write-Host "Binaries written to $ProjectRoot\target\release\" -ForegroundColor Green
 } else {
-    Write-Host "Skipping binary installation." -ForegroundColor Yellow
+    Write-Host "Skipping build. Run 'makers build-greedy' (or 'cargo build --release') when ready." -ForegroundColor Yellow
 }
 
 # ── Summary ──────────────────────────────────────────────────────────
@@ -132,10 +138,11 @@ Write-Host "  Config: $configFile" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 if ($binariesInstalled) {
-    Write-Host "  dyt-daemon                  # start the daemon"
-    Write-Host "  dyt --record                # record and transcribe"
+    Write-Host "  .\target\release\dyt-daemon        # start the daemon"
+    Write-Host "  .\target\release\dyt --record      # record and transcribe"
 } else {
     Write-Host "  cargo build --release"
-    Write-Host "  cargo run -p dyt-daemon"
+    Write-Host "  .\target\release\dyt-daemon"
+    Write-Host "  .\target\release\dyt --record"
 }
 Write-Host ""

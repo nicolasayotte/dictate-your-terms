@@ -113,21 +113,24 @@ if [[ ! -f "$CONFIG_FILE" ]] || [[ "${overwrite:-Y}" =~ ^[Yy]$ ]]; then
   echo "==> Config written to $CONFIG_FILE"
 fi
 
-# ── Step 6: Build and install binaries (optional) ───────────────────
+# ── Step 6: Build release binaries ──────────────────────────────────
 
 echo ""
-read -rp "Build and install dyt binaries to ~/.cargo/bin? [y/N]: " install_bins
-install_bins="${install_bins:-N}"
+read -rp "Build release binaries now? [y/N]: " build_bins
+build_bins="${build_bins:-N}"
 
-if [[ "$install_bins" =~ ^[Yy]$ ]]; then
-  echo "==> Building and installing dyt-daemon..."
-  cargo install --path "$REPO_ROOT/dyt-daemon"
-  echo "==> Building and installing dyt (CLI)..."
-  cargo install --path "$REPO_ROOT/dyt-cli"
+if [[ "$build_bins" =~ ^[Yy]$ ]]; then
+  echo "==> Building release binaries with native CPU optimisations (this may take a while)..."
+  cd "$REPO_ROOT"
+  if command -v makers &>/dev/null; then
+    makers build-greedy
+  else
+    RUSTFLAGS="-C target-cpu=native" cargo build --release
+  fi
   BINS_INSTALLED=true
-  echo "==> Binaries installed to ~/.cargo/bin"
+  echo "==> Binaries written to $REPO_ROOT/target/release/"
 else
-  echo "==> Skipping binary install."
+  echo "==> Skipping build. Run 'makers build-greedy' (or 'cargo build --release') when ready."
 fi
 
 # ── Step 7: Summary ─────────────────────────────────────────────────
@@ -139,13 +142,12 @@ echo "  Model:  $MODEL_PATH"
 echo "  Config: $CONFIG_FILE"
 echo ""
 
+echo "Next steps:"
 if $BINS_INSTALLED; then
-  echo "Next steps:"
-  echo "  1. Start the daemon:        dyt-daemon"
-  echo "  2. Record and transcribe:   dyt --record"
+  echo "  1. Start the daemon:        ./target/release/dyt-daemon"
+  echo "  2. Record and transcribe:   ./target/release/dyt --record"
 else
-  echo "Next steps:"
-  echo "  1. Build the project:       cargo build --release"
-  echo "  2. Start the daemon:        cargo run -p dyt-daemon"
-  echo "  3. Record and transcribe:   cargo run -p dyt-cli -- --record"
+  echo "  1. Build:                   cargo build --release"
+  echo "  2. Start the daemon:        ./target/release/dyt-daemon"
+  echo "  3. Record and transcribe:   ./target/release/dyt --record"
 fi

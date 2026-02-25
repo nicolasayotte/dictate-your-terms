@@ -1,0 +1,3 @@
+# Per-project Cargo configuration.
+# Native CPU flags live in Makefile.toml (build-greedy) so this file stays
+# portable — 'cargo build --release' produces a generic binary.

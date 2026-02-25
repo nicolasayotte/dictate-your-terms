@@ -1,0 +1,34 @@
+# cargo-make task runner — install with: cargo install cargo-make
+# Usage: makers build-greedy   (local dev, native CPU)
+#        makers build-generic  (portable, for distribution)
+#        makers clean
+
+# =============================================================================
+# Tasks
+# =============================================================================
+
+[tasks.build-greedy]
+description = "Build with native CPU optimisation (AVX2/FMA/F16C — local dev only)"
+workspace = false
+env = { RUSTFLAGS = "-C target-cpu=native" }
+command = "cargo"
+args = ["build", "--release"]
+
+# On Windows, whisper.cpp 1.7.4 + MSVC /O2 has a perf regression in ggml.
+# The "perf" profile keeps Rust optimised but forces cmake Debug for the C++ libs.
+# Binary outputs to target/perf/.
+[tasks.build-greedy.windows]
+env = { RUSTFLAGS = "-C target-cpu=native" }
+args = ["build", "--profile", "perf"]
+
+[tasks.build-generic]
+description = "Build a portable binary with no CPU-specific flags (distribution)"
+workspace = false
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.clean]
+description = "Remove build artefacts"
+workspace = false
+command = "cargo"
+args = ["clean"]

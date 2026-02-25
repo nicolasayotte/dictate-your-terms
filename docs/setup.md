@@ -11,7 +11,7 @@ Interactive scripts handle everything in one shot:
 .\scripts\setup.ps1     # Windows (PowerShell)
 ```
 
-Each script optionally installs system dependencies, lets you choose and download a whisper model, writes the config, and optionally runs `cargo install` for both binaries. All optional steps default to **no**.
+Each script optionally installs system dependencies, lets you choose and download a whisper model, writes the config, and optionally runs `cargo build --release`. All optional steps default to **no**.
 
 ---
 
@@ -81,11 +81,31 @@ After installation, `cargo build --release` will pick up OpenBLAS automatically.
 
 ## Build
 
+Build tasks are managed with [cargo-make](https://github.com/sagiegurari/cargo-make). Install it once:
+
 ```bash
-cargo build --release
+cargo install cargo-make
+```
+
+| Command | When to use |
+|---|---|
+| `makers build-greedy` | Local dev — enables AVX2/FMA/F16C for your CPU (10–20× faster whisper inference) |
+| `makers build-generic` | Portable binary with no CPU-specific flags |
+
+```bash
+makers build-greedy
 # Outputs:
 #   target/release/dyt-daemon    (or .exe on Windows)
 #   target/release/dyt           (or .exe on Windows)
+```
+
+If you don't have `cargo-make`, you can build directly:
+
+```bash
+# Native (local dev)
+RUSTFLAGS="-C target-cpu=native" cargo build --release
+# Generic
+cargo build --release
 ```
 
 ## Whisper Model
@@ -129,11 +149,7 @@ See the `config/` directory for example configs.
 ### Start the Daemon
 
 ```bash
-# Development (from project root)
-cargo run -p dyt-daemon
-
-# Installed binary
-dyt-daemon
+./target/release/dyt-daemon
 ```
 
 The daemon logs to stdout and stays running. It binds `127.0.0.1:3030` by default. Restart it to reload the model or config.
@@ -142,10 +158,7 @@ The daemon logs to stdout and stays running. It binds `127.0.0.1:3030` by defaul
 
 ```bash
 # Start recording; speak, then press Enter to stop and transcribe
-cargo run -p dyt-cli -- --record
-
-# Installed binary
-dyt --record
+./target/release/dyt --record
 ```
 
 The transcript is injected into the clipboard and printed to stdout.
@@ -162,10 +175,10 @@ Tests mic capture → WAV encoding pipeline without the daemon. Use this to veri
 
 ```bash
 # Terminal 1
-dyt-daemon
+./target/release/dyt-daemon
 
 # Terminal 2
-dyt --record
+./target/release/dyt --record
 # Speak, press Enter → transcript appears in clipboard
 ```
 
