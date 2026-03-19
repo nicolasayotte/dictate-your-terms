@@ -205,6 +205,10 @@ threads = 4          # optional — defaults to auto-detected CPU core count
 
 Each integration opens a small recording surface, runs `dyt --record`, then inserts the transcript directly into the editor or pane — no manual copy/paste.
 
+### Wayland
+
+Support for Wayland may be enabled with the `wayland` feature of `dyt-cli`.
+
 ### Neovim — [dyt.nvim](https://github.com/nicolasayotte/dyt.nvim)
 
 Opens a centered floating terminal. Speak, press Enter, and the transcript is inserted at the cursor. Works from normal and insert mode.
