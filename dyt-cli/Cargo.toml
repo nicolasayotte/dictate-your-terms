@@ -12,6 +12,9 @@ path = "src/main.rs"
 name = "dyt-smoke"
 path = "src/smoke.rs"
 
+[features]
+wayland = ["arboard/wayland-data-control"]
+
 [dependencies]
 cpal = "0.15"
 ringbuf = "0.4"
