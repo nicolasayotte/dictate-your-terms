@@ -13,6 +13,10 @@ struct Cli {
     /// Daemon address
     #[arg(long, default_value = "http://127.0.0.1:3030")]
     daemon: String,
+
+    /// Suppress copying text to the clipboard.
+    #[arg(long)]
+    no_clipboard: bool,
 }
 
 fn main() -> Result<()> {
@@ -33,9 +37,11 @@ fn main() -> Result<()> {
     let text = transport::transcribe(&cli.daemon, &wav_bytes)?;
     eprintln!("Transcribed: {text}");
 
-    let mut clipboard = arboard::Clipboard::new()?;
-    clipboard.set_text(&text)?;
-    eprintln!("Copied to clipboard.");
+    if !cli.no_clipboard {
+        let mut clipboard = arboard::Clipboard::new()?;
+        clipboard.set_text(&text)?;
+        eprintln!("Copied to clipboard.");
+    }
 
     // Also print to stdout for piping
     print!("{text}");

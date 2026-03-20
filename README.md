@@ -169,11 +169,13 @@ dyt --record
 dyt --record --daemon http://192.168.1.10:3030
 ```
 
-Output goes to both clipboard and stdout, so you can pipe it:
+By default, output goes to both clipboard and stdout, so you can pipe it:
 
 ```bash
 dyt --record | wc -w
 ```
+
+Copying to the clipboard can be suppressed with the `--no-clipboard` option.
 
 ### Smoke test
 
