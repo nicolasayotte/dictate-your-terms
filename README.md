@@ -177,6 +177,8 @@ dyt --record | wc -w
 
 Copying to the clipboard can be suppressed with the `--no-clipboard` option.
 
+Output may be redirected to a file with the `--output` flag.
+
 ### Smoke test
 
 Verify your mic works without needing the daemon:

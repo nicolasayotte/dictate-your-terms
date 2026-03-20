@@ -1,3 +1,7 @@
+use std::fs::File;
+use std::io::Write;
+use std::path::PathBuf;
+
 use dyt_cli::{capture, encode, transport};
 
 use anyhow::Result;
@@ -17,6 +21,10 @@ struct Cli {
     /// Suppress copying text to the clipboard.
     #[arg(long)]
     no_clipboard: bool,
+
+    /// Write to an output file. Defaults to stdout.
+    #[arg(long)]
+    output: Option<PathBuf>,
 }
 
 fn main() -> Result<()> {
@@ -43,8 +51,13 @@ fn main() -> Result<()> {
         eprintln!("Copied to clipboard.");
     }
 
-    // Also print to stdout for piping
-    print!("{text}");
+    if let Some(output) = cli.output {
+        let mut fout = File::create(output)?;
+        write!(fout, "{text}")?;
+    } else {
+        // Also print to stdout for piping
+        print!("{text}");
+    }
 
     Ok(())
 }
